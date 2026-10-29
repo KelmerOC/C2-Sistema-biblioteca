@@ -3,12 +3,31 @@ const { Libro, Prestamo } = require('../models');
 
 // GET /libros  (?titulo=)
 async function listar(req, res) {
-    // FASE 2
+    try {
+        const where = {};
+        if (req.query.titulo) {
+            where.titulo = { [Op.like]: `%${req.query.titulo}%` };
+        }
+        const libros = await Libro.findAll({ where });
+        res.json(libros);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ mensaje: 'Error al obtener los libros' });
+    }
 }
 
 // GET /libros/:id
 async function obtener(req, res) {
-    // FASE 2
+    try {
+        const libro = await Libro.findByPk(req.params.id);
+        if (!libro) {
+            return res.status(404).json({ mensaje: 'Libro no encontrado' });
+        }
+        res.json(libro);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ mensaje: 'Error al obtener el libro' });
+    }
 }
 
 // POST /libros
