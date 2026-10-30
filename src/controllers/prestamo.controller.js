@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const { Op } = require('sequelize');
-const { Prestamo, Libro, sequelize } = require('../models');
+const { Prestamo, Libro, Usuario, sequelize } = require('../models');
 
 // Helper: devuelve la fecha de hoy en formato YYYY-MM-DD usando la hora local
 function obtenerFechaHoy() {
@@ -215,9 +215,65 @@ async function devolver(req, res) {
     }
 }
 
+// GET /prestamos
+async function listar(req, res) {
+    try {
+        const where = {};
+        if (req.usuario.rol !== 'admin') {
+            where.usuario_id = req.usuario.id;
+        }
+
+        const prestamos = await Prestamo.findAll({
+            where,
+            include: [
+                { model: Libro, attributes: ['titulo', 'autor'] },
+                { model: Usuario, attributes: ['nombre', 'email'] }
+            ],
+            order: [['id', 'DESC']]
+        });
+
+        res.json(prestamos);
+    } catch (error) {
+        console.error('Error en listar préstamos:', error);
+        res.status(500).json({ mensaje: 'Error al listar los préstamos' });
+    }
+}
+
+// GET /prestamos/:id
+async function obtener(req, res) {
+    try {
+        const id = parseInt(req.params.id, 10);
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ mensaje: 'El id debe ser numérico' });
+        }
+
+        const prestamo = await Prestamo.findByPk(id, {
+            include: [
+                { model: Libro, attributes: ['titulo', 'autor'] },
+                { model: Usuario, attributes: ['nombre', 'email'] }
+            ]
+        });
+
+        if (!prestamo) {
+            return res.status(404).json({ mensaje: 'Préstamo no encontrado' });
+        }
+
+        if (req.usuario.rol !== 'admin' && prestamo.usuario_id !== req.usuario.id) {
+            return res.status(403).json({ mensaje: 'Acceso denegado: no tienes permisos para ver este préstamo' });
+        }
+
+        res.json(prestamo);
+    } catch (error) {
+        console.error('Error en obtener préstamo:', error);
+        res.status(500).json({ mensaje: 'Error al obtener el préstamo' });
+    }
+}
+
 module.exports = {
     solicitar,
     aprobar,
-    devolver
+    devolver,
+    listar,
+    obtener
 };
 
