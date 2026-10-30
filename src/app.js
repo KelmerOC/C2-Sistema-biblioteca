@@ -4,6 +4,7 @@ const { sequelize } = require('./models');
 const authRoutes = require('./routes/auth.routes');
 const usuarioRoutes = require('./routes/usuario.routes');
 const libroRoutes = require('./routes/libro.routes');
+const prestamoRoutes = require('./routes/prestamo.routes');
 
 const app = express();
 app.use(express.json());
@@ -18,6 +19,7 @@ app.use('/usuarios', usuarioRoutes);
 
 // ===== Módulo 3: libros y préstamos =====
 app.use('/libros', libroRoutes);
+app.use('/prestamos', prestamoRoutes);
 
 // Manejo de errores (siempre al final de las rutas)
 app.use((err, req, res, next) => {
